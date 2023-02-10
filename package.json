@@ -1,0 +1,21 @@
+{
+  "name": "node-test-exe",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "bin:win": "ncc build -o build/lib index.js && pkg --target node16-win-x64  -o build/agent.exe ./build/lib/index.js",
+    "bin:mac": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 -o build/agent-bin ./build/lib/index.js",
+    "bin:mac-zip": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 --compress GZip -o build/agent-zip ./build/lib/index.js",
+    "bin:mac-bro": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 --compress Brotli -o build/agent-brotli ./build/lib/index.js",
+    "binary2": "ncc build -o build/lib index.js && pkg   ./build/lib/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@vercel/ncc": "^0.36.1",
+    "pkg": "^5.8.0"
+  }
+}
