@@ -19,7 +19,7 @@ pipeline {
         }
         stage('Push the binary to jFrog') {
             steps {
-                sh "curl -s -o /dev/null -H 'Authorization: Bearer ${jfrogToken}' -XPUT '${jfrogRepoPath}/agent-${BUILD_ID}' -T ${binaryFilePath}"
+                sh "curl -f -H 'Authorization: Bearer ${jfrogToken}' -XPUT '${jfrogRepoPath}/agent-${BUILD_ID}' -T ${binaryFilePath}"
             }
         }
     }
