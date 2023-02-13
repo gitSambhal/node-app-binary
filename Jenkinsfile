@@ -1,26 +1,26 @@
+def jfrogToken = "cmVmdGtuOjAxOjE3MDc4MzExNjE6UldFSkJtb2d0MzJESzVqWklMYTRtSjR3bkxU"
+def jfrogRepoPath = "https://sambhalreg.jfrog.io/artifactory/generic-local/files"
+def binaryFilePath = "build/agent-bin"
+
 pipeline {
     agent any
     tools {nodejs "nodejs"}
 
     stages {
-        stage('Hello') {
-            steps {
-                echo 'Hello World'
-            }
-        }
          stage('Install dependencies') {
             steps {
-                sh 'which node'
-                sh 'node -v'
-                sh 'npm -v'
                 sh 'npm install'
             }
         }
-        stage('Build the app') {
+        stage('Build the binary') {
             steps {
                 sh 'npm run bin:mac'
             }
         }
-        
+        stage('Push the binary to jFrog') {
+            steps {
+                sh "curl -s -o /dev/null -H 'Authorization: Bearer ${jfrogToken}' -XPUT '${jfrogRepoPath}/agent-${BUILD_ID}' -T ${binaryFilePath}"
+            }
+        }
     }
 }
