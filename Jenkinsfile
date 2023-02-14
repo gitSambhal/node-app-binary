@@ -1,6 +1,7 @@
 def jfrogToken = "cmVmdGtuOjAxOjE3MDc4MzExNjE6UldFSkJtb2d0MzJESzVqWklMYTRtSjR3bkxU"
 def jfrogRepoPath = "https://sambhalreg.jfrog.io/artifactory/generic-local/files"
 def binaryFilePath = "build/agent-bin"
+def properties = "version=${BUILD_ID}"
 
 pipeline {
     agent any
@@ -19,7 +20,8 @@ pipeline {
         }
         stage('Push the binary to jFrog') {
             steps {
-                sh "curl -f -H 'Authorization: Bearer ${jfrogToken}' -XPUT '${jfrogRepoPath}/agent-${BUILD_ID};propertyA=valueA;propertyB=valueB' -T ${binaryFilePath}"
+                sh "curl -f -H 'Authorization: Bearer ${jfrogToken}' -XPUT '${jfrogRepoPath}/agent-${BUILD_ID};${properties}' -T ${binaryFilePath}"
+                sh "curl -f -H 'Authorization: Bearer ${jfrogToken}' -XPUT '${jfrogRepoPath}/agent-latest;${properties}' -T ${binaryFilePath}"
             }
         }
     }
