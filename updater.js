@@ -85,11 +85,15 @@ const checkApiToGetVersionToInstallForThisMerchant = async () => {
     console.error('Error occurred while checking the version from api or merchant key not found')
   }
 
-  if (versionToInstall) {
-    saveBinaryFile(versionToInstall)
-  } else {
-    versionToInstall = await getTheLatestVersionInfoInJfrog()
-    saveBinaryFile(versionToInstall);
+  if (!versionToInstall) {
+    console.error('Version not found in the api for this merchant')
+    return;
   }
+  const currentInstalledVersion = await getCurrentInstalledVersionNumber()
+  if (currentInstalledVersion == versionToInstall) {
+    console.warn('Correct version is installed already')
+    return;
+  }
+  saveBinaryFile(versionToInstall)
 }
 checkApiToGetVersionToInstallForThisMerchant();
