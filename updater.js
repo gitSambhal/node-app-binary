@@ -41,8 +41,22 @@ fs.mkdir(filePathToDownloadAgent, { recursive: true }, (err) => {
   if (err) throw err;
 });
 
+const getDateTimeString = () => {
+  const currentTime = new Date();
+  const date = [
+    currentTime.getDate(),
+    currentTime.getMonth() + 1,
+    currentTime.getFullYear(),
+  ].join('-')
+  const time = [currentTime.getHours(), currentTime.getMinutes(), currentTime.getSeconds()].join('')
+  const str = `${date}_${time}`
+  return str;
+
+}
+
 const getFilePathToSaveDownloadedAgent = (version) => {
-  const filePath = filePathToDownloadAgent + 'agent-' + version + '.exe'
+  const time = getDateTimeString();
+  const filePath = filePathToDownloadAgent + 'agent_' + version + '_' + time + '.exe'
   return filePath
 }
 
