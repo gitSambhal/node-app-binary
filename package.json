@@ -5,11 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index",
-    "bin:win": "ncc build -o build/lib index.js && pkg --target node16-win-x64  -o build/agent.exe ./build/lib/index.js && npm run jfrog:push",
-    "bin:mac": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 -o build/agent-bin ./build/lib/index.js",
-    "bin:mac-zip": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 --compress GZip -o build/agent-zip ./build/lib/index.js",
-    "bin:mac-bro": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 --compress Brotli -o build/agent-brotli ./build/lib/index.js",
-    "binary2": "ncc build -o build/lib index.js && pkg   ./build/lib/index.js"
+    "pkg:win": "ncc build -o build/lib index.js && pkg --target node16-win-x64  -o build/agent.exe ./build/lib/index.js && npm run jfrog:push",
+    "pkg:mac": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 -o build/agent-mac-bin ./build/lib/index.js",
+    "pkg-updater:mac": "ncc build updater.js -o build/lib  && pkg --target node16-mac-arm64 -o build/agent-updater-mac-bin ./build/lib/index.js"
   },
   "keywords": [],
   "author": "",
