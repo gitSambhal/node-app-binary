@@ -1,25 +1,45 @@
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path')
+const dotenv = require('dotenv');
+const { cleanEnv, str, url, } = require('envalid');
+
+const FILE_NAMES = {
+  ENV: 'configuration.txt',
+  VERSION: 'version.txt',
+}
+
+const DIR_NAMES = {
+  DOWNLOAD_AGENT: 'dist',
+}
 
 const isRunningAsPackaged = process?.pkg;
 const currentDir = isRunningAsPackaged ? path.dirname(process.execPath) : __dirname;
 const versionPattern = '#VERSION#'
-const filePathPatternInJfrog = `https://sambhalreg.jfrog.io/artifactory/generic-local/files/agent-win-${versionPattern}`
-const apiUrlToCheckTheAgentVersion = 'https://rbaskets.in/vydtv1c'
 const latestVersion = 'latest'
-const versionFilePath = `${currentDir}/version.txt`
-const filePathToDownloadAgent = `${currentDir}/dist/`;
+const versionFilePath = path.join(currentDir, FILE_NAMES.VERSION);
+const filePathToDownloadAgent = path.join(currentDir, DIR_NAMES.DOWNLOAD_AGENT);
+const envFilePath = path.join(currentDir, FILE_NAMES.ENV);
+
+// Configure dotenv
+dotenv.config({ path: envFilePath });
+const env = cleanEnv(process.env, {
+  JFROG_URL_ARTIFACT_FOLDER: url(),
+  URL_API_TO_CHECK_VERSION: url(),
+  JFROG_TOKEN: str(),
+});
+
+const filePathPatternInJfrog = `${env.JFROG_URL_ARTIFACT_FOLDER}/agent-win-${versionPattern}`
+const apiUrlToCheckTheAgentVersion = env.URL_API_TO_CHECK_VERSION;
+
+const headers = {
+  Authorization: `Bearer ${env.JFROG_TOKEN}`
+}
 
 // Create path if doesn't exists
 fs.mkdir(filePathToDownloadAgent, { recursive: true }, (err) => {
   if (err) throw err;
 });
-
-const headers = {
-  Authorization: 'Bearer cmVmdGtuOjAxOjE3MDc4MzExNjE6UldFSkJtb2d0MzJESzVqWklMYTRtSjR3bkxU'
-}
-
 
 const getFilePathToSaveDownloadedAgent = (version) => {
   const filePath = filePathToDownloadAgent + 'agent-' + version + '.exe'
