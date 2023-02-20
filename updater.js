@@ -1,12 +1,15 @@
 const axios = require('axios');
 const fs = require('fs').promises;
+const path = require('path')
 
+const isRunningAsPackaged = process?.pkg;
+const currentDir = isRunningAsPackaged ? path.dirname(process.execPath) : __dirname;
 const versionPattern = '#VERSION#'
 const filePathPatternInJfrog = `https://sambhalreg.jfrog.io/artifactory/generic-local/files/agent-win-${versionPattern}`
 const apiUrlToCheckTheAgentVersion = 'https://rbaskets.in/vydtv1c'
-const versionFilePath = './version.txt'
 const latestVersion = 'latest'
-const filePathToDownloadAgent = './build/';
+const versionFilePath = `${currentDir}/version.txt`
+const filePathToDownloadAgent = `${currentDir}/dist/`;
 
 // Create path if doesn't exists
 fs.mkdir(filePathToDownloadAgent, { recursive: true }, (err) => {
