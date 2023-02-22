@@ -98,7 +98,6 @@ const saveBinaryFile = (version) => {
       return resolve()
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.log('🚀 ~ file: updater.js:76 ~ saveBinaryFile ~ error', error);
         let errorResp = error.message;
         if (error.response && error.response.data) {
           errorResp = error.response.data.toString()
