@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-ENV DOPPLER_TOKEN "dp.st.dev.8tdQjtTTORLAczirJEdio2TdJPrzR9iyod2DOw7h7LR"
+ENV DOPPLER_TOKEN "DOPPLER_ACCESS_TOKEN_HERE"
 
 # Install Doppler CLI
 # RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl gnupg && \
