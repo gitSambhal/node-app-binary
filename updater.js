@@ -224,6 +224,7 @@ function logToDataDog({ message, level, error = null }) {
     service: DD_INFO.SERVICE_NAME,
     ...error && { error },
   };
+  console.log(message)
   return axios.post(DD_INFO.API_URL, payload, {
     headers: headers
   });
