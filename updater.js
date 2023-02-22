@@ -105,7 +105,7 @@ const saveBinaryFile = (version) => {
         }
         logMessage('Unable to download the file ' + errorResp)
       }
-      logError(error.message, error)
+      logError('saveBinaryFile error: ' + error.message, error)
       return reject(error.message)
     }
   })
@@ -121,7 +121,7 @@ const getTheLatestVersionInfoInJfrog = async () => {
     logMessage('Latest version in jfrog: ' + version);
     return version
   } catch (error) {
-    logError(error.message, error)
+    logError('getTheLatestVersionInfoInJfrog Error: ' + error.message, error)
     throw error
   }
 }
@@ -135,7 +135,7 @@ const getCurrentInstalledVersionNumber = () => {
       logMessage('Current installed version: ' + version)
       return resolve(version);
     } catch (error) {
-      logError(error.message, error)
+      logError('getCurrentInstalledVersionNumber Error: ' + error.message, error)
       reject(error.message);
     }
   })
@@ -153,18 +153,18 @@ const checkApiToGetVersionToInstallForThisMerchant = () => {
       const { data: apiResp } = await axios.get(apiUrlToCheckTheAgentVersion)
       versionToInstall = apiResp[currentMerchantKey];
     } catch (error) {
-      logError('Error occurred while checking the version from api or merchant key not found')
+      logError('checkApiToGetVersionToInstallForThisMerchant Error: Error occurred while checking the version from api or merchant key not found')
       return reject(error)
     }
 
     if (!versionToInstall) {
-      const msg = 'Version not found in the api for this merchant'
+      const msg = 'checkApiToGetVersionToInstallForThisMerchant Error: Version not found in the api for this merchant'
       logError(msg)
       return reject(msg)
     }
     const currentInstalledVersion = await getCurrentInstalledVersionNumber()
     if (currentInstalledVersion == versionToInstall) {
-      const msg = 'Correct version is installed already'
+      const msg = 'checkApiToGetVersionToInstallForThisMerchant Error: Correct version is installed already'
       logMessage(msg)
       return reject(msg)
     }
@@ -195,7 +195,9 @@ function pingToHealthCheck({ type = PING_TYPES.SUCCESS, data = null } = {}) {
     log: '/log',
   }
   const url = env.HC_PING_URL_UPDATER + typesMap[type];
-  return axios.post(url, data)
+  axios.post(url, data).catch(e => {
+    logError('pingToHealthCheck Error: ' + e.message, e)
+  })
 }
 
 function logMessage(message = '') {
