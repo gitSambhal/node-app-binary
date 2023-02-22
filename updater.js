@@ -22,22 +22,12 @@ const PING_TYPES = {
   LOG: 'log',
 }
 
-const FILE_NAMES = {
-  ENV: 'configuration.txt',
-  VERSION: 'version.txt',
-}
-
-const DIR_NAMES = {
-  DOWNLOAD_AGENT: 'dist',
-}
-
+const CONFIGURATION_FILE_NAME = 'configuration.txt'
 const isRunningAsPackaged = process?.pkg;
 const currentDir = isRunningAsPackaged ? path.dirname(process.execPath) : __dirname;
 const versionPattern = '#VERSION#'
 const latestVersion = 'latest'
-const versionFilePath = path.join(currentDir, FILE_NAMES.VERSION);
-const filePathToDownloadAgent = path.join(currentDir, DIR_NAMES.DOWNLOAD_AGENT);
-const envFilePath = path.join(currentDir, FILE_NAMES.ENV);
+const envFilePath = path.join(currentDir, CONFIGURATION_FILE_NAME);
 
 // Configure dotenv
 dotenv.config({ path: envFilePath });
@@ -46,10 +36,22 @@ const env = cleanEnv(process.env, {
   URL_API_TO_CHECK_VERSION: url(),
   JFROG_TOKEN: str(),
   DD_API_KEY: str(),
+  VERSION_FILE_NAME: str(),
+  AGENT_DOWNLOAD_DIRECTORY: str(),
   TS_MERCHANT_KEY: str(),
   HC_PING_URL_UPDATER: url(),
 });
 
+const FILE_NAMES = {
+  VERSION: env.VERSION_FILE_NAME,
+}
+
+const DIR_NAMES = {
+  DOWNLOAD_AGENT: env.AGENT_DOWNLOAD_DIRECTORY,
+}
+
+const versionFilePath = path.join(currentDir, FILE_NAMES.VERSION);
+const filePathToDownloadAgent = path.join(currentDir, DIR_NAMES.DOWNLOAD_AGENT);
 const filePathPatternInJfrog = `${env.JFROG_URL_ARTIFACT_FOLDER}/agent-win-${versionPattern}`
 const apiUrlToCheckTheAgentVersion = env.URL_API_TO_CHECK_VERSION;
 
