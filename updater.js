@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const path = require('path')
 const dotenv = require('dotenv');
 const { cleanEnv, str, url, } = require('envalid');
+const cron = require('node-cron');
 
 const DD_INFO = {
   API_URL: 'https://http-intake.logs.datadoghq.eu/v1/input',
@@ -32,14 +33,15 @@ const envFilePath = path.join(currentDir, CONFIGURATION_FILE_NAME);
 // Configure dotenv
 dotenv.config({ path: envFilePath });
 const env = cleanEnv(process.env, {
-  JFROG_URL_ARTIFACT_FOLDER: url(),
-  URL_API_TO_CHECK_VERSION: url(),
-  JFROG_TOKEN: str(),
-  DD_API_KEY: str(),
-  VERSION_FILE_NAME: str(),
   AGENT_DOWNLOAD_DIRECTORY: str(),
-  TS_MERCHANT_KEY: str(),
+  DD_API_KEY: str(),
+  HC_PING_URL_CRON: url(),
   HC_PING_URL_UPDATER: url(),
+  JFROG_TOKEN: str(),
+  JFROG_URL_ARTIFACT_FOLDER: url(),
+  TS_MERCHANT_KEY: str(),
+  URL_API_TO_CHECK_VERSION: url(),
+  VERSION_FILE_NAME: str(),
 });
 
 const FILE_NAMES = {
@@ -226,7 +228,19 @@ function logToDataDog({ message, level, error = null }) {
     ...error && { error },
   };
   console.log(message)
-  return axios.post(DD_INFO.API_URL, payload, {
+  axios.post(DD_INFO.API_URL, payload, {
     headers: headers
+  }).catch((e) => {
+    console.log('logToDataDog Error: ' + e.message)
   });
 }
+
+cron.schedule('* * * * *', () => {
+  console.log('running a task every minute');
+  const url = env.HC_PING_URL_CRON;
+  axios.get(url).catch(e => {
+    logError('pingToHealthCheck cron Error: ' + e.message, e)
+  }).then(() => {
+    console.log('Ping success')
+  })
+});
