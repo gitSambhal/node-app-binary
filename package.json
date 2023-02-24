@@ -7,7 +7,10 @@
     "start": "node index",
     "pkg:win": "ncc build -o build/lib index.js && pkg --target node16-win-x64  -o build/agent.exe ./build/lib/index.js && npm run jfrog:push",
     "pkg:mac": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 -o build/agent-mac-bin ./build/lib/index.js",
-    "pkg-updater:mac": "ncc build updater.js -o build/lib  && pkg --target node16-mac-arm64 -o build/agent-updater-mac-bin ./build/lib/index.js"
+    "pkg-updater:mac": "ncc build updater.js -o build/lib  && pkg --target node16-mac-arm64 -o build/agent-updater-mac-bin ./build/lib/index.js",
+    "pack": "ncc build index.js -o ./build",
+    "pkg": "pkg ./index.js --target node16-mac-arm64 -o build/agent-updater-mac-bin",
+    "build": "pnpm run pack && pnpm run pkg"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +21,7 @@
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^4.2.1",
-    "axios": "^1.3.3",
+    "axios": "^0.27.2",
     "dotenv": "^16.0.3",
     "envalid": "^7.3.1",
     "node-cron": "^3.0.2"
