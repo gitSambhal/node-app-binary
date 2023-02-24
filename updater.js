@@ -55,7 +55,7 @@ const DIR_NAMES = {
   DOWNLOAD_AGENT: env.AGENT_DOWNLOAD_DIRECTORY,
 }
 
-const versionFilePath = path.join(currentDir, FILE_NAMES.VERSION);
+const versionFilePath = path.join(__dirname, FILE_NAMES.VERSION);
 const filePathToDownloadAgent = path.join(currentDir, DIR_NAMES.DOWNLOAD_AGENT);
 const filePathPatternInJfrog = `${env.JFROG_URL_ARTIFACT_FOLDER}/agent-win-${versionPattern}`
 const apiUrlToCheckTheAgentVersion = env.URL_API_TO_CHECK_VERSION;
