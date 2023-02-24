@@ -35,13 +35,16 @@ dotenv.config({ path: envFilePath });
 const env = cleanEnv(process.env, {
   AGENT_DOWNLOAD_DIRECTORY: str(),
   DD_API_KEY: str(),
-  HC_PING_URL_CRON: url(),
-  HC_PING_URL_UPDATER: url(),
   JFROG_TOKEN: str(),
   JFROG_URL_ARTIFACT_FOLDER: url(),
   TS_MERCHANT_KEY: str(),
   URL_API_TO_CHECK_VERSION: url(),
   VERSION_FILE_NAME: str(),
+  HC_API_KEY: str(),
+  HC_API_BASE_URL: url(),
+  HC_PING_URL: url(),
+  HC_UUID_CRON: str(),
+  HC_UUID_UPDATER: str(),
 });
 
 const FILE_NAMES = {
@@ -195,7 +198,7 @@ function pingToHealthCheck({ type = PING_TYPES.SUCCESS, data = null } = {}) {
     fail: '/fail',
     log: '/log',
   }
-  const url = env.HC_PING_URL_UPDATER + typesMap[type];
+  const url = combinePathToUrl([env.HC_UUID_UPDATER, typesMap[type]], env.HC_PING_URL)
   axios.post(url, data).catch(e => {
     logError('pingToHealthCheck Error: ' + e.message, e)
   })
@@ -235,6 +238,29 @@ function logToDataDog({ message, level, error = null }) {
   });
 }
 
+async function toggleHealthCheckMonitor(uuid, isPause = true) {
+  const action = isPause ? 'pause' : 'resume'
+  const headers = {
+    'X-Api-Key': env.HC_API_KEY,
+    'Content-Type': 'application/x-www-form-urlencoded',
+  }
+  const url = combinePathToUrl(['api/v2/checks', uuid, action], env.HC_API_BASE_URL)
+  const response = await axios.post(
+    url,
+    '',
+    {
+      headers
+    }
+  ).catch((e) => {
+    logError(e.message, error)
+  });
+}
+
+function combinePathToUrl(pathList, baseUrl) {
+  const fullUrl = new URL(path.join(...pathList), baseUrl).toString();
+  return fullUrl
+}
+
 cron.schedule('* * * * *', () => {
   console.log('running a task every minute');
   const url = env.HC_PING_URL_CRON;
@@ -244,3 +270,14 @@ cron.schedule('* * * * *', () => {
     console.log('Ping success')
   })
 });
+
+// Cron job to pause health check monitor at 7 PM daily
+cron.schedule('0 19 * * *', () => {
+  toggleHealthCheckMonitor(env.HC_UUID_CRON)
+});
+
+// Cron job to resume health check monitor at 7 AM daily
+cron.schedule('0 7 * * *', () => {
+  toggleHealthCheckMonitor(env.HC_UUID_CRON, false)
+});
+
