@@ -166,15 +166,18 @@ const checkApiToGetVersionToInstallForThisMerchant = () => {
       logError(msg)
       return reject(msg)
     }
-    const currentInstalledVersion = await getCurrentInstalledVersionNumber()
-    if (currentInstalledVersion == versionToInstall) {
-      const msg = 'checkApiToGetVersionToInstallForThisMerchant Error: Correct version is installed already'
-      logMessage(msg)
-      return reject(msg)
+    try {
+      const currentInstalledVersion = await getCurrentInstalledVersionNumber()
+      if (currentInstalledVersion == versionToInstall) {
+        const msg = 'checkApiToGetVersionToInstallForThisMerchant Error: Correct version is installed already'
+        logMessage(msg)
+        return reject(msg)
+      }
+      return resolve(saveBinaryFile(versionToInstall))
+    } catch (error) {
+      return reject(error)
     }
-    return resolve(saveBinaryFile(versionToInstall))
   })
-
 }
 
 const main = () => {
