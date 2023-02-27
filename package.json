@@ -9,7 +9,7 @@
     "pkg:mac": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 -o build/agent-mac-bin ./build/lib/index.js",
     "pkg-updater:mac": "ncc build updater.js -o build/lib  && pkg --target node16-mac-arm64 -o build/agent-updater-mac-bin ./build/lib/index.js",
     "pack": "ncc build index.js -o ./build",
-    "pkg": "pkg ./index.js --target node16-mac-arm64 -o build/agent-updater-mac-bin",
+    "pkg": "pkg ./src/index.js --target node16-mac-arm64 -o build/agent-updater-mac-bin",
     "build": "pnpm run pack && pnpm run pkg"
   },
   "keywords": [],
