@@ -1,37 +1,19 @@
-const axios = require('axios');
-const fs = require('fs').promises;
-const path = require('path')
-const dotenv = require('dotenv');
-const { cleanEnv, str, url, } = require('envalid');
-const cron = require('node-cron');
+import { get, isAxiosError } from 'axios';
+import { promises as fs } from 'fs';
+import { dirname, join } from 'path';
+import { config } from 'dotenv';
+import { cleanEnv, str, url } from 'envalid';
 
-const DD_INFO = {
-  API_URL: 'https://http-intake.logs.datadoghq.eu/v1/input',
-  HOST: 'local',
-  SERVICE_NAME: 'CUSCSPI-AGENT-UPDATER',
-  SOURCE: 'nodejs',
-  LOG_LEVEL: {
-    ERROR: 'error',
-    LOG: 'log',
-    WARN: 'warn',
-  },
-}
-
-const PING_TYPES = {
-  SUCCESS: 'success',
-  FAIL: 'fail',
-  LOG: 'log',
-}
 
 const CONFIGURATION_FILE_NAME = 'configuration.txt'
 const isRunningAsPackaged = process?.pkg;
-const currentDir = isRunningAsPackaged ? path.dirname(process.execPath) : __dirname;
+const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
 const versionPattern = '#VERSION#'
 const latestVersion = 'latest'
-const envFilePath = path.join(currentDir, CONFIGURATION_FILE_NAME);
+const envFilePath = join(currentDir, CONFIGURATION_FILE_NAME);
 
 // Configure dotenv
-dotenv.config({ path: envFilePath });
+config({ path: envFilePath }); ç
 const env = cleanEnv(process.env, {
   AGENT_DOWNLOAD_DIRECTORY: str(),
   DD_API_KEY: str(),
@@ -48,17 +30,17 @@ const env = cleanEnv(process.env, {
 });
 
 const FILE_NAMES = {
-  VERSION: env.VERSION_FILE_NAME,
+  VERSION: process.env.VERSION_FILE_NAME,
 }
 
 const DIR_NAMES = {
-  DOWNLOAD_AGENT: env.AGENT_DOWNLOAD_DIRECTORY,
+  DOWNLOAD_AGENT: process.env.AGENT_DOWNLOAD_DIRECTORY,
 }
 
-const versionFilePath = path.join(__dirname, FILE_NAMES.VERSION);
-const filePathToDownloadAgent = path.join(currentDir, DIR_NAMES.DOWNLOAD_AGENT);
+const versionFilePath = join(__dirname, FILE_NAMES.VERSION);
+const filePathToDownloadAgent = join(currentDir, DIR_NAMES.DOWNLOAD_AGENT);
 const filePathPatternInJfrog = `${env.JFROG_URL_ARTIFACT_FOLDER}/agent-win-${versionPattern}`
-const apiUrlToCheckTheAgentVersion = env.URL_API_TO_CHECK_VERSION;
+const apiUrlToCheckTheAgentVersion = process.env.URL_API_TO_CHECK_VERSION;
 
 const headers = {
   Authorization: `Bearer ${env.JFROG_TOKEN}`
@@ -93,7 +75,7 @@ const saveBinaryFile = (version) => {
     try {
       const filePath = filePathPatternInJfrog.replace(versionPattern, version);
       logMessage(`Downloading the version: ${version}`)
-      const res = await axios.get(filePath, {
+      const res = await get(filePath, {
         responseType: 'arraybuffer',
         headers
       });
@@ -102,7 +84,7 @@ const saveBinaryFile = (version) => {
       await fs.writeFile(versionFilePath, String(version));
       return resolve()
     } catch (error) {
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         let errorResp = error.message;
         if (error.response && error.response.data) {
           errorResp = error.response.data.toString()
@@ -119,7 +101,7 @@ const getTheLatestVersionInfoInJfrog = async () => {
   const error = new Error('Version not found in jFrog')
   const filePath = filePathPatternInJfrog.replace(versionPattern, latestVersion);
   try {
-    const res = await axios.get(filePath + '?properties', { headers })
+    const res = await get(filePath + '?properties', { headers })
     const version = res?.data?.properties?.version?.[0]
     if (!version) throw error
     logMessage('Latest version in jfrog: ' + version);
@@ -146,7 +128,7 @@ const getCurrentInstalledVersionNumber = () => {
 }
 
 const getMerchantKey = async () => {
-  return env.TS_MERCHANT_KEY;
+  return process.env.TS_MERCHANT_KEY;
 }
 
 const checkApiToGetVersionToInstallForThisMerchant = () => {
@@ -154,7 +136,7 @@ const checkApiToGetVersionToInstallForThisMerchant = () => {
     let versionToInstall;
     try {
       const currentMerchantKey = await getMerchantKey()
-      const { data: apiResp } = await axios.get(apiUrlToCheckTheAgentVersion)
+      const { data: apiResp } = await get(apiUrlToCheckTheAgentVersion)
       versionToInstall = apiResp[currentMerchantKey];
     } catch (error) {
       logError('checkApiToGetVersionToInstallForThisMerchant Error: Error occurred while checking the version from api or merchant key not found')
@@ -194,93 +176,5 @@ const main = () => {
 }
 main();
 
-// Types : success, fail, log
-function pingToHealthCheck({ type = PING_TYPES.SUCCESS, data = null } = {}) {
-  const typesMap = {
-    success: '',
-    fail: '/fail',
-    log: '/log',
-  }
-  const url = combinePathToUrl([env.HC_UUID_UPDATER, typesMap[type]], env.HC_PING_URL)
-  axios.post(url, data).catch(e => {
-    logError('pingToHealthCheck Error: ' + e.message, e)
-  })
-}
 
-function logMessage(message = '') {
-  if (!message) return;
-  logToDataDog({ message, level: DD_INFO.LOG_LEVEL.LOG })
-}
-
-function logError(message = '', error = null) {
-  if (!message) return;
-  logToDataDog({
-    message, level: DD_INFO.LOG_LEVEL.ERROR, error
-  })
-}
-
-function logToDataDog({ message, level, error = null }) {
-  let headers = {
-    'Content-Type': 'application/json',
-    'DD-API-KEY': env.DD_API_KEY,
-  }
-  let payload = {
-    date: new Date().toISOString(),
-    ddsource: DD_INFO.SOURCE,
-    hostname: DD_INFO.HOST,
-    level,
-    message,
-    service: DD_INFO.SERVICE_NAME,
-    ...error && { error },
-  };
-  console.log(message)
-  axios.post(DD_INFO.API_URL, payload, {
-    headers: headers
-  }).catch((e) => {
-    console.log('logToDataDog Error: ' + e.message)
-  });
-}
-
-async function toggleHealthCheckMonitor(uuid, isPause = true) {
-  const action = isPause ? 'pause' : 'resume'
-  const headers = {
-    'X-Api-Key': env.HC_API_KEY,
-    'Content-Type': 'application/x-www-form-urlencoded',
-  }
-  const url = combinePathToUrl(['api/v2/checks', uuid, action], env.HC_API_BASE_URL)
-  const response = await axios.post(
-    url,
-    '',
-    {
-      headers
-    }
-  ).catch((e) => {
-    logError(e.message, error)
-  });
-}
-
-function combinePathToUrl(pathList, baseUrl) {
-  const fullUrl = new URL(path.join(...pathList), baseUrl).toString();
-  return fullUrl
-}
-
-cron.schedule('* * * * *', () => {
-  console.log('running a task every minute');
-  const url = env.HC_PING_URL_CRON;
-  axios.get(url).catch(e => {
-    logError('pingToHealthCheck cron Error: ' + e.message, e)
-  }).then(() => {
-    console.log('Ping success')
-  })
-});
-
-// Cron job to pause health check monitor at 7 PM daily
-cron.schedule('0 19 * * *', () => {
-  toggleHealthCheckMonitor(env.HC_UUID_CRON)
-});
-
-// Cron job to resume health check monitor at 7 AM daily
-cron.schedule('0 7 * * *', () => {
-  toggleHealthCheckMonitor(env.HC_UUID_CRON, false)
-});
 
