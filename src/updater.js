@@ -1,55 +1,39 @@
-import { get, isAxiosError } from 'axios';
-import { promises as fs } from 'fs';
-import { dirname, join } from 'path';
-import { config } from 'dotenv';
-import { cleanEnv, str, url } from 'envalid';
+const { promises: fs } = require('fs');
+const { dirname, join } = require('path');
+const { default: axios, isAxiosError } = require('axios');
+const { loadEnv, getEnvVar } = require('./env.config');
+const { logMessage, logError, pingToHealthCheck, PING_TYPES } = require('./helpers');
 
-
-const CONFIGURATION_FILE_NAME = 'configuration.txt'
 const isRunningAsPackaged = process?.pkg;
 const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
 const versionPattern = '#VERSION#'
 const latestVersion = 'latest'
-const envFilePath = join(currentDir, CONFIGURATION_FILE_NAME);
-
-// Configure dotenv
-config({ path: envFilePath }); ç
-const env = cleanEnv(process.env, {
-  AGENT_DOWNLOAD_DIRECTORY: str(),
-  DD_API_KEY: str(),
-  JFROG_TOKEN: str(),
-  JFROG_URL_ARTIFACT_FOLDER: url(),
-  TS_MERCHANT_KEY: str(),
-  URL_API_TO_CHECK_VERSION: url(),
-  VERSION_FILE_NAME: str(),
-  HC_API_KEY: str(),
-  HC_API_BASE_URL: url(),
-  HC_PING_URL: url(),
-  HC_UUID_CRON: str(),
-  HC_UUID_UPDATER: str(),
-});
 
 const FILE_NAMES = {
-  VERSION: process.env.VERSION_FILE_NAME,
+  VERSION: 'version.txt',
 }
 
-const DIR_NAMES = {
-  DOWNLOAD_AGENT: process.env.AGENT_DOWNLOAD_DIRECTORY,
+const versionFilePath = join(__dirname, '..', FILE_NAMES.VERSION);
+
+const getJfrogApiHeaders = () => {
+  const headers = {
+    Authorization: `Bearer ${getEnvVar('JFROG_TOKEN')}`
+  }
+  return headers
+}
+const getApiUrlToCheckTheAgentVersion = () => {
+  const apiUrlToCheckTheAgentVersion = getEnvVar('URL_API_TO_CHECK_VERSION');
+  return apiUrlToCheckTheAgentVersion;
 }
 
-const versionFilePath = join(__dirname, FILE_NAMES.VERSION);
-const filePathToDownloadAgent = join(currentDir, DIR_NAMES.DOWNLOAD_AGENT);
-const filePathPatternInJfrog = `${env.JFROG_URL_ARTIFACT_FOLDER}/agent-win-${versionPattern}`
-const apiUrlToCheckTheAgentVersion = process.env.URL_API_TO_CHECK_VERSION;
-
-const headers = {
-  Authorization: `Bearer ${env.JFROG_TOKEN}`
+const getFilePathPatternInJfrog = () => {
+  const filePathPattern = `${getEnvVar('JFROG_URL_ARTIFACT_FOLDER')}/agent-win-${versionPattern}`;
+  return filePathPattern;
 }
 
-// Create path if doesn't exists
-fs.mkdir(filePathToDownloadAgent, { recursive: true }, (err) => {
-  if (err) throw err;
-});
+const getAgentDownloadDir = () => {
+  return join(currentDir, getEnvVar('AGENT_DOWNLOAD_DIRECTORY'))
+}
 
 const getDateTimeString = () => {
   const currentTime = new Date();
@@ -66,18 +50,19 @@ const getDateTimeString = () => {
 
 const getFilePathToSaveDownloadedAgent = (version) => {
   const time = getDateTimeString();
-  const filePath = filePathToDownloadAgent + 'agent_' + version + '_' + time + '.exe'
+  const filePath = getAgentDownloadDir() + 'agent_' + version + '_' + time + '.exe'
   return filePath
 }
 
 const saveBinaryFile = (version) => {
   return new Promise(async (resolve, reject) => {
     try {
+      const filePathPatternInJfrog = getFilePathPatternInJfrog();
       const filePath = filePathPatternInJfrog.replace(versionPattern, version);
       logMessage(`Downloading the version: ${version}`)
-      const res = await get(filePath, {
+      const res = await axios.get(filePath, {
         responseType: 'arraybuffer',
-        headers
+        headers: getJfrogApiHeaders(),
       });
       await fs.writeFile(getFilePathToSaveDownloadedAgent(version), res.data);
       logMessage(`Version ${version} downloaded successfully, Updating the version info in the file`)
@@ -99,9 +84,10 @@ const saveBinaryFile = (version) => {
 
 const getTheLatestVersionInfoInJfrog = async () => {
   const error = new Error('Version not found in jFrog')
+  const filePathPatternInJfrog = getFilePathPatternInJfrog();
   const filePath = filePathPatternInJfrog.replace(versionPattern, latestVersion);
   try {
-    const res = await get(filePath + '?properties', { headers })
+    const res = await axios.get(filePath + '?properties', { headers })
     const version = res?.data?.properties?.version?.[0]
     if (!version) throw error
     logMessage('Latest version in jfrog: ' + version);
@@ -128,7 +114,7 @@ const getCurrentInstalledVersionNumber = () => {
 }
 
 const getMerchantKey = async () => {
-  return process.env.TS_MERCHANT_KEY;
+  return getEnvVar('TS_MERCHANT_KEY');
 }
 
 const checkApiToGetVersionToInstallForThisMerchant = () => {
@@ -136,7 +122,8 @@ const checkApiToGetVersionToInstallForThisMerchant = () => {
     let versionToInstall;
     try {
       const currentMerchantKey = await getMerchantKey()
-      const { data: apiResp } = await get(apiUrlToCheckTheAgentVersion)
+      const apiUrlToCheckTheAgentVersion = getApiUrlToCheckTheAgentVersion()
+      const { data: apiResp } = await axios.get(apiUrlToCheckTheAgentVersion)
       versionToInstall = apiResp[currentMerchantKey];
     } catch (error) {
       logError('checkApiToGetVersionToInstallForThisMerchant Error: Error occurred while checking the version from api or merchant key not found')
@@ -162,8 +149,14 @@ const checkApiToGetVersionToInstallForThisMerchant = () => {
   })
 }
 
-const main = () => {
+const main = async () => {
+  await loadEnv();
   logMessage('--------------- Start ---------------')
+  // Create path if doesn't exists
+  fs.mkdir(getAgentDownloadDir(), { recursive: true }, (err) => {
+    if (err) throw err;
+  });
+
   checkApiToGetVersionToInstallForThisMerchant()
     .then(() => {
       pingToHealthCheck({ type: PING_TYPES.SUCCESS })
@@ -175,6 +168,3 @@ const main = () => {
     ])
 }
 main();
-
-
-
