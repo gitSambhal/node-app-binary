@@ -134,3 +134,4 @@ dist
 
 # Configuration file
 configuration.txt
+.DS_Store

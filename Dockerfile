@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+RUN npm run build:ts
+
 ENV DOPPLER_TOKEN "DOPPLER_ACCESS_TOKEN_HERE"
 
 # Install Doppler CLI
@@ -21,8 +23,7 @@ ENV DOPPLER_TOKEN "DOPPLER_ACCESS_TOKEN_HERE"
 RUN wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.key' -O /etc/apk/keys/cli@doppler-8004D9FF50437357.rsa.pub && \
     echo 'https://packages.doppler.com/public/cli/alpine/any-version/main' | tee -a /etc/apk/repositories && \
     apk add doppler
+
 ENTRYPOINT ["doppler", "run", "--"]
 
-CMD ["node", "index"]
-
-EXPOSE 3000
+CMD ["node", "dist/index"]

@@ -1,29 +1,43 @@
 {
-  "name": "node-test-exe",
+  "name": "typescript-eslint-prettier-starter",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index",
-    "pkg:win": "ncc build -o build/lib index.js && pkg --target node16-win-x64  -o build/agent.exe ./build/lib/index.js && npm run jfrog:push",
-    "pkg:mac": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 -o build/agent-mac-bin ./build/lib/index.js",
-    "pkg-updater:mac": "ncc build updater.js -o build/lib  && pkg --target node16-mac-arm64 -o build/agent-updater-mac-bin ./build/lib/index.js",
+    "build:binary": "pnpm run pack && pnpm run pkg",
+    "build:ts": "tsc",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "lint:fix": "eslint . --fix",
+    "lint": "eslint .",
     "pack": "ncc build index.js -o ./build",
+    "pkg-updater:mac": "ncc build updater.js -o build/lib  && pkg --target node16-mac-arm64 -o build/agent-updater-mac-bin ./build/lib/index.js",
+    "pkg:mac": "ncc build -o build/lib index.js && pkg --target node16-mac-arm64 -o build/agent-mac-bin ./build/lib/index.js",
+    "pkg:win": "ncc build -o build/lib index.js && pkg --target node16-win-x64  -o build/agent.exe ./build/lib/index.js && npm run jfrog:push",
     "pkg": "pkg ./src/index.js --target node16-mac-arm64 -o build/agent-updater-mac-bin",
-    "build": "pnpm run pack && pnpm run pkg"
+    "start": "tsc && node dist/index.js",
+    "start:updater": "tsc && node dist/updater.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@vercel/ncc": "^0.36.1",
-    "pkg": "^5.8.0"
-  },
   "dependencies": {
     "@google-cloud/secret-manager": "^4.2.1",
     "axios": "^0.27.2",
     "dotenv": "^16.0.3",
     "envalid": "^7.3.1",
     "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/parser": "^5.54.0",
+    "@vercel/ncc": "^0.36.1",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint": "^8.35.0",
+    "nodemon": "^2.0.20",
+    "pkg": "^5.8.0",
+    "prettier": "^2.8.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
   }
 }

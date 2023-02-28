@@ -1,8 +1,9 @@
 // This is the agent functionality
-const { loadEnv } = require('./env.config');
+import { loadEnv } from './env.config';
 
 async function main() {
-  await loadEnv()
+  console.log('Inside main');
+  await loadEnv();
   // Do your work here.
 }
 main();
