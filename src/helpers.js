@@ -20,6 +20,8 @@ const PING_TYPES = {
   LOG: 'log',
 }
 
+exports.PING_TYPES = PING_TYPES;
+
 // Types : success, fail, log
 exports.pingToHealthCheck = ({ type = PING_TYPES.SUCCESS, data = null } = {}) => {
   const typesMap = {
@@ -29,13 +31,13 @@ exports.pingToHealthCheck = ({ type = PING_TYPES.SUCCESS, data = null } = {}) =>
   }
   const url = this.combinePathToUrl([getEnvVar('HC_UUID_UPDATER'), typesMap[type]], getEnvVar('HC_PING_URL'))
   axios.post(url, data).catch(e => {
-    logError('pingToHealthCheck Error: ' + e.message, e)
+    this.logError('pingToHealthCheck Error: ' + e.message, e)
   })
 }
 
 exports.logMessage = (message = '') => {
   if (!message) return;
-  logToDataDog({ message, level: DD_INFO.LOG_LEVEL.LOG })
+  this.logToDataDog({ message, level: DD_INFO.LOG_LEVEL.LOG })
 }
 
 exports.logError = (message = '', error = null) => {
@@ -57,9 +59,9 @@ exports.logToDataDog = ({ message, level, error = null }) => {
     level,
     message,
     service: DD_INFO.SERVICE_NAME,
-    ...error && { error },
+    ...(error && { error }),
   };
-  console.log(message, error)
+  error ? console.log(message, error) : console.log(message);
   axios.post(DD_INFO.API_URL, payload, {
     headers: headers
   }).catch((e) => {
@@ -81,7 +83,7 @@ exports.toggleHealthCheckMonitor = async (uuid, isPause = true) => {
       headers
     }
   ).catch((e) => {
-    logError(e.message, error)
+    this.logError(e.message, error)
   });
 }
 
