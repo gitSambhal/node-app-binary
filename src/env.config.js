@@ -13,7 +13,6 @@ const envVarRules = {
   JFROG_URL_ARTIFACT_FOLDER: url(),
   TS_MERCHANT_KEY: str(),
   URL_API_TO_CHECK_VERSION: url(),
-  VERSION_FILE_NAME: str(),
   HC_API_KEY: str(),
   HC_API_BASE_URL: url(),
   HC_PING_URL: url(),
