@@ -9,8 +9,7 @@ module.exports = {
   ignorePatterns: ['.eslintrc.js'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 9,
-    project: './tsconfig.json',
+    ecmaVersion: 9
   },
   plugins: ['@typescript-eslint'],
 };

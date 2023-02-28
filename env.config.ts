@@ -1,4 +1,6 @@
 import axios from 'axios';
+import fs from 'fs';
+import { dirname, join } from 'path';
 import * as dotenv from 'dotenv';
 import { cleanEnv, str, url } from 'envalid';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
@@ -20,13 +22,20 @@ const envVarRules = {
   HC_UUID_CRON: str(),
   HC_UUID_UPDATER: str(),
 };
+const isRunningAsPackaged = (process as any)?.pkg;
+const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
 
-dotenv.config({ path: CONFIG_FILE_NAME });
+const envFilePath = join(currentDir, CONFIG_FILE_NAME);
+if (!fs.existsSync(envFilePath)) {
+  // Do something
+  throw new Error(`${envFilePath} doesn't exists`);
+}
+dotenv.config({ path: envFilePath });
+console.log(process.env.DOPPLER_TOKEN);
 
 const loadEnvFromDopplerAPI = () => {
   return new Promise(async (resolve, reject) => {
-    const DOPPLER_TOKEN = process.env.DOPPLER_TOKEN;
-    const token = DOPPLER_TOKEN;
+    const token = process.env.DOPPLER_TOKEN;
     const headers = {
       Authorization: `Bearer ${token}`,
     };

@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { default as axios } from 'axios';
-import { loadEnv, getEnvVar } from './env.config';
+import { loadEnv, getEnvVar } from '../env.config';
 import { logMessage, logError, pingToHealthCheck, PING_TYPES } from './helpers';
 
 declare let process: {

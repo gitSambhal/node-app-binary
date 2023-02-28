@@ -1,6 +1,6 @@
 import axios from 'axios';
 import cron from 'node-cron';
-import { getEnvVar } from './env.config';
+import { getEnvVar } from '../env.config';
 import { logError, toggleHealthCheckMonitor } from './helpers';
 
 cron.schedule('* * * * *', () => {
