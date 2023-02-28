@@ -1,10 +1,10 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
-import { default as axios, AxiosError } from 'axios';
+import { default as axios } from 'axios';
 import { loadEnv, getEnvVar } from './env.config';
 import { logMessage, logError, pingToHealthCheck, PING_TYPES } from './helpers';
 
-declare var process: {
+declare let process: {
   pkg: any;
   execPath: any;
 };
@@ -33,7 +33,7 @@ const getApiUrlToCheckTheAgentVersion = () => {
 
 const getFilePathPatternInJfrog = () => {
   const filePathPattern = `${getEnvVar(
-    'JFROG_URL_ARTIFACT_FOLDER'
+    'JFROG_URL_ARTIFACT_FOLDER',
   )}/agent-win-${versionPattern}`;
   return filePathPattern;
 };
@@ -63,7 +63,7 @@ const getFilePathToSaveDownloadedAgent = (version) => {
   const time = getDateTimeString();
   const filePath = join(
     getAgentDownloadDir(),
-    'agent_' + version + '_' + time + '.exe'
+    'agent_' + version + '_' + time + '.exe',
   );
   return filePath;
 };
@@ -80,7 +80,7 @@ const saveBinaryFile = (version): Promise<void> => {
       });
       await fs.writeFile(getFilePathToSaveDownloadedAgent(version), res.data);
       logMessage(
-        `Version ${version} downloaded successfully, Updating the version info in the file`
+        `Version ${version} downloaded successfully, Updating the version info in the file`,
       );
       await fs.writeFile(versionFilePath, String(version));
       return resolve();
@@ -103,7 +103,7 @@ const getTheLatestVersionInfoInJfrog = async () => {
   const filePathPatternInJfrog = getFilePathPatternInJfrog();
   const filePath = filePathPatternInJfrog.replace(
     versionPattern,
-    latestVersion
+    latestVersion,
   );
   try {
     const res = await axios.get(filePath + '?properties', {
@@ -130,7 +130,7 @@ const getCurrentInstalledVersionNumber = () => {
     } catch (error) {
       logError(
         'getCurrentInstalledVersionNumber Error: ' + error.message,
-        error
+        error,
       );
       reject(error.message);
     }
@@ -151,7 +151,7 @@ const checkApiToGetVersionToInstallForThisMerchant = () => {
       versionToInstall = apiResp[currentMerchantKey];
     } catch (error) {
       logError(
-        'checkApiToGetVersionToInstallForThisMerchant Error: Error occurred while checking the version from api or merchant key not found'
+        'checkApiToGetVersionToInstallForThisMerchant Error: Error occurred while checking the version from api or merchant key not found',
       );
       return reject(error);
     }

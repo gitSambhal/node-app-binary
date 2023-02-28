@@ -32,7 +32,7 @@ export const pingToHealthCheck = ({
   };
   const url = combinePathToUrl(
     [getEnvVar('HC_UUID_UPDATER'), typesMap[type]],
-    getEnvVar('HC_PING_URL')
+    getEnvVar('HC_PING_URL'),
   );
   axios.post(url, data).catch((e) => {
     logError('pingToHealthCheck Error: ' + e.message, e);
@@ -54,11 +54,11 @@ export const logError = (message = '', error = null) => {
 };
 
 export const logToDataDog = ({ message, level, error = null }) => {
-  let headers = {
+  const headers = {
     'Content-Type': 'application/json',
     'DD-API-KEY': getEnvVar('DD_API_KEY'),
   };
-  let payload = {
+  const payload = {
     date: new Date().toISOString(),
     ddsource: DD_INFO.SOURCE,
     hostname: DD_INFO.HOST,
@@ -85,7 +85,7 @@ export const toggleHealthCheckMonitor = async (uuid, isPause = true) => {
   };
   const url = combinePathToUrl(
     ['api/v2/checks', uuid, action],
-    getEnvVar('HC_API_BASE_URL')
+    getEnvVar('HC_API_BASE_URL'),
   );
   const response = await axios
     .post(url, '', {
