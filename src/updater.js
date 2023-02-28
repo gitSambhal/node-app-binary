@@ -32,7 +32,8 @@ const getFilePathPatternInJfrog = () => {
 }
 
 const getAgentDownloadDir = () => {
-  return join(currentDir, getEnvVar('AGENT_DOWNLOAD_DIRECTORY'))
+  const dir = join(currentDir, '..', getEnvVar('AGENT_DOWNLOAD_DIRECTORY'))
+  return dir;
 }
 
 const getDateTimeString = () => {
@@ -50,7 +51,7 @@ const getDateTimeString = () => {
 
 const getFilePathToSaveDownloadedAgent = (version) => {
   const time = getDateTimeString();
-  const filePath = getAgentDownloadDir() + 'agent_' + version + '_' + time + '.exe'
+  const filePath = join(getAgentDownloadDir(), 'agent_' + version + '_' + time + '.exe')
   return filePath
 }
 
