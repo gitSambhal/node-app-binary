@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
     "module": "commonjs",
-    "rootDir": "src",
+    "moduleResolution": "node",
     "outDir": "dist",
     "sourceMap": true,
-    "resolveJsonModule": true,
-    "lib": ["es6", "dom"],
-    "esModuleInterop": true
+    "target": "es6"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules"]
 }

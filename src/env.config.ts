@@ -4,6 +4,7 @@ import { dirname, join } from 'path';
 import * as dotenv from 'dotenv';
 import { cleanEnv, str, url } from 'envalid';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+import { logError } from './helpers';
 
 let env;
 const DOPPLER_API_URL =
@@ -25,7 +26,7 @@ const envVarRules = {
 const isRunningAsPackaged = (process as any)?.pkg;
 const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
 
-const envFilePath = join(currentDir, CONFIG_FILE_NAME);
+const envFilePath = join(CONFIG_FILE_NAME);
 if (!fs.existsSync(envFilePath)) {
   // Do something
   throw new Error(`${envFilePath} doesn't exists`);
@@ -79,6 +80,12 @@ export const loadEnv = () => {
   return loadEnvFromDopplerAPI();
 };
 
-export const getEnvVar = (key) => {
-  return env[key];
+export const getEnvVar = (key: string) => {
+  const value = env?.[key];
+  if (typeof value == 'undefined') {
+    const message = `${key} is not found in the configuration.`;
+    logError(message);
+    throw new Error(message);
+  }
+  return value;
 };
