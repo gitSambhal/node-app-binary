@@ -4,7 +4,7 @@ import { dirname, join } from 'path';
 import * as dotenv from 'dotenv';
 import { cleanEnv, str, url } from 'envalid';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
-import { isRunningAsTypescript } from './helpers';
+import { isRunningAsPackagedBinary, isRunningAsTypescript } from './helpers';
 
 let env;
 const DOPPLER_API_URL =
@@ -29,8 +29,8 @@ const envVarRules = {
   HC_UUID_UPDATER: str(),
 };
 
-const isRunningAsPackaged = (process as any)?.pkg;
-const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
+// prettier-ignore
+const currentDir = (isRunningAsPackagedBinary() ? dirname(process.execPath) : __dirname);
 const envFilePath = join(
   currentDir,
   isRunningAsTypescript() ? '..' : '.',

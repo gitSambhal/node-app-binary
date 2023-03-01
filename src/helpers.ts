@@ -116,3 +116,5 @@ export const isRunningAsTypescript = (): boolean => {
 
   return !isRunningFromJsFile;
 };
+
+export const isRunningAsPackagedBinary = () => (process as any)?.pkg;

@@ -2,10 +2,15 @@ import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { default as axios } from 'axios';
 import { getEnvVar } from './env.config';
-import { logMessage, logError, isRunningAsTypescript } from './helpers';
+import {
+  logMessage,
+  logError,
+  isRunningAsTypescript,
+  isRunningAsPackagedBinary,
+} from './helpers';
 
-const isRunningAsPackaged = (process as any)?.pkg;
-const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
+// prettier-ignore
+const currentDir = (isRunningAsPackagedBinary() ? dirname(process.execPath) : __dirname);
 const versionPattern = '#VERSION#';
 const latestVersion = 'latest';
 
@@ -38,7 +43,11 @@ const getFilePathPatternInJfrog = () => {
 };
 
 export const getAgentDownloadDir = () => {
-  const dir = join(currentDir, '..', getEnvVar('AGENT_DOWNLOAD_DIRECTORY'));
+  const dir = join(
+    currentDir,
+    isRunningAsTypescript() ? '..' : '.',
+    getEnvVar('AGENT_DOWNLOAD_DIRECTORY'),
+  );
   return dir;
 };
 
@@ -77,7 +86,8 @@ const saveBinaryFile = (version): Promise<void> => {
         responseType: 'arraybuffer',
         headers: getJfrogApiHeaders(),
       });
-      await fs.writeFile(getFilePathToSaveDownloadedAgent(version), res.data);
+      const filePathToSave = getFilePathToSaveDownloadedAgent(version);
+      await fs.writeFile(filePathToSave, res.data);
       logMessage(
         `Version ${version} downloaded successfully, Updating the version info in the file`,
       );
