@@ -9,6 +9,11 @@ let env;
 const DOPPLER_API_URL =
   'https://api.doppler.com/v3/configs/config/secrets/download';
 const CONFIG_FILE_NAME = 'configuration.txt';
+
+const envVarRulesLocal = {
+  DOPPLER_TOKEN: str(),
+};
+
 const envVarRules = {
   AGENT_DOWNLOAD_DIRECTORY: str(),
   DD_API_KEY: str(),
@@ -23,15 +28,15 @@ const envVarRules = {
   HC_UUID_UPDATER: str(),
 };
 const isRunningAsPackaged = (process as any)?.pkg;
-const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
 
 const envFilePath = join(CONFIG_FILE_NAME);
 if (!fs.existsSync(envFilePath)) {
-  // Do something
-  throw new Error(`${envFilePath} doesn't exists`);
+  throw new Error(
+    `Configuration file ${envFilePath} doesn't exists. Make sure it is available in the same directory where the application is present.`,
+  );
 }
 dotenv.config({ path: envFilePath });
-console.log(process.env.DOPPLER_TOKEN);
+cleanEnv(process.env, envVarRulesLocal);
 
 const loadEnvFromDopplerAPI = () => {
   return new Promise(async (resolve, reject) => {
@@ -82,7 +87,11 @@ export const loadEnv = () => {
 export const getEnvVar = (key: string) => {
   const value = env?.[key];
   if (typeof value == 'undefined') {
-    const message = `${key} is not found in the configuration or it was loaded after running the actual functionality.`;
+    const msgArr = [
+      `${key} is not found in the configuration or it was loaded after running the actual functionality.`,
+      `Make sure configuration from cloud is loaded before running anything else.`,
+    ];
+    const message = msgArr.join(' ');
     console.error(message);
     throw new Error(message);
   }
