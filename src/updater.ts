@@ -2,14 +2,9 @@ import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { default as axios } from 'axios';
 import { getEnvVar } from './env.config';
-import { logMessage, logError } from './helpers';
+import { logMessage, logError, isRunningAsTypescript } from './helpers';
 
-declare let process: {
-  pkg: any;
-  execPath: any;
-};
-
-const isRunningAsPackaged = process?.pkg;
+const isRunningAsPackaged = (process as any)?.pkg;
 const currentDir = isRunningAsPackaged ? dirname(process.execPath) : __dirname;
 const versionPattern = '#VERSION#';
 const latestVersion = 'latest';
@@ -18,7 +13,11 @@ const FILE_NAMES = {
   VERSION: 'version.txt',
 };
 
-const versionFilePath = join(__dirname, '..', FILE_NAMES.VERSION);
+const versionFilePath = join(
+  currentDir,
+  isRunningAsTypescript() ? '..' : '.',
+  FILE_NAMES.VERSION,
+);
 
 const getJfrogApiHeaders = () => {
   const headers = {

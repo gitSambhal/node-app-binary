@@ -100,3 +100,19 @@ export const combinePathToUrl = (pathList, baseUrl) => {
   const fullUrl = new URL(path.join(...pathList), baseUrl).toString();
   return fullUrl;
 };
+
+export const isRunningAsTypescript = (): boolean => {
+  const tsNodeModule = 'ts-node';
+  const isRunningFromTsNode = process.argv[0].endsWith(
+    `${tsNodeModule}/dist/bin.js`,
+  );
+  const isRunningFromTsc = process.argv[1].endsWith('tsc');
+
+  if (isRunningFromTsNode || isRunningFromTsc) {
+    return true;
+  }
+
+  const isRunningFromJsFile = require.main?.filename.endsWith('.js');
+
+  return !isRunningFromJsFile;
+};
