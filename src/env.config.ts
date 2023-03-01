@@ -4,7 +4,6 @@ import { dirname, join } from 'path';
 import * as dotenv from 'dotenv';
 import { cleanEnv, str, url } from 'envalid';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
-import { logError } from './helpers';
 
 let env;
 const DOPPLER_API_URL =
@@ -83,8 +82,8 @@ export const loadEnv = () => {
 export const getEnvVar = (key: string) => {
   const value = env?.[key];
   if (typeof value == 'undefined') {
-    const message = `${key} is not found in the configuration.`;
-    logError(message);
+    const message = `${key} is not found in the configuration or it was loaded after running the actual functionality.`;
+    console.error(message);
     throw new Error(message);
   }
   return value;
