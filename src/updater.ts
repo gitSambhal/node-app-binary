@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { default as axios } from 'axios';
-import { loadEnv, getEnvVar } from '../env.config';
-import { logMessage, logError, pingToHealthCheck, PING_TYPES } from './helpers';
+import { getEnvVar } from './env.config';
+import { logMessage, logError } from './helpers';
 
 declare let process: {
   pkg: any;
@@ -38,7 +38,7 @@ const getFilePathPatternInJfrog = () => {
   return filePathPattern;
 };
 
-const getAgentDownloadDir = () => {
+export const getAgentDownloadDir = () => {
   const dir = join(currentDir, '..', getEnvVar('AGENT_DOWNLOAD_DIRECTORY'));
   return dir;
 };
@@ -141,7 +141,7 @@ const getMerchantKey = async () => {
   return getEnvVar('TS_MERCHANT_KEY');
 };
 
-const checkApiToGetVersionToInstallForThisMerchant = () => {
+export const checkApiToGetVersionToInstallForThisMerchant = () => {
   return new Promise(async (resolve, reject) => {
     let versionToInstall;
     try {
@@ -176,20 +176,3 @@ const checkApiToGetVersionToInstallForThisMerchant = () => {
     }
   });
 };
-
-const main = async () => {
-  await loadEnv();
-  logMessage('--------------- Start ---------------');
-  // Create path if doesn't exists
-  fs.mkdir(getAgentDownloadDir(), { recursive: true });
-
-  checkApiToGetVersionToInstallForThisMerchant()
-    .then(() => {
-      pingToHealthCheck({ type: PING_TYPES.SUCCESS });
-    })
-    .catch((error) => {
-      pingToHealthCheck({ type: PING_TYPES.FAIL, data: error });
-    })
-    .finally(() => [logMessage('--------------- End ---------------')]);
-};
-main();

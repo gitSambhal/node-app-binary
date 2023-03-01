@@ -1,6 +1,6 @@
 import * as path from 'path';
 import axios from 'axios';
-import { getEnvVar } from '../env.config';
+import { getEnvVar } from './env.config';
 
 const DD_INFO = {
   API_URL: 'https://http-intake.logs.datadoghq.eu/v1/input',
