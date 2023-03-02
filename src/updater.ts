@@ -1,6 +1,9 @@
 import { promises as fs } from 'fs';
+import * as fS from 'fs';
+import * as path from 'path';
 import { dirname, join } from 'path';
 import { default as axios } from 'axios';
+import ProgressBar from 'progress';
 import { getEnvVar } from './env.config';
 import {
   logMessage,
@@ -81,18 +84,35 @@ const saveBinaryFile = (version): Promise<void> => {
     try {
       const filePathPatternInJfrog = getFilePathPatternInJfrog();
       const filePath = filePathPatternInJfrog.replace(versionPattern, version);
-      logMessage(`Downloading the version: ${version}`);
+      logMessage(`Starting download of the version: ${version}`);
       const res = await axios.get(filePath, {
-        responseType: 'arraybuffer',
+        responseType: 'stream',
         headers: getJfrogApiHeaders(),
       });
-      const filePathToSave = getFilePathToSaveDownloadedAgent(version);
-      await fs.writeFile(filePathToSave, res.data);
-      logMessage(
-        `Version ${version} downloaded successfully, Updating the version info in the file`,
+      const totalLength = res.headers['content-length'];
+      const progressBar = new ProgressBar(
+        '-> Downloading [:bar] :percent :etas',
+        {
+          width: 40,
+          complete: '=',
+          incomplete: ' ',
+          renderThrottle: 1,
+          total: parseInt(totalLength),
+        },
       );
-      await fs.writeFile(versionFilePath, String(version));
-      return resolve();
+
+      const filePathToSave = getFilePathToSaveDownloadedAgent(version);
+      const writer = fS.createWriteStream(path.resolve(filePathToSave));
+
+      res.data.on('data', (chunk) => progressBar.tick(chunk.length));
+      res.data.on('end', async () => {
+        logMessage(
+          `Version ${version} downloaded successfully, Updating the version info in the file`,
+        );
+        await fs.writeFile(versionFilePath, String(version));
+        return resolve();
+      });
+      res.data.pipe(writer);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         let errorResp = error.message;
