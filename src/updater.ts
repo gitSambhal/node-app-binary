@@ -4,7 +4,6 @@ import * as path from 'path';
 import { dirname, join } from 'path';
 import { default as axios } from 'axios';
 import ProgressBar from 'progress';
-import chalk from 'chalk';
 import { getEnvVar } from './env.config';
 import {
   logMessage,
@@ -86,9 +85,7 @@ const saveBinaryFile = (version): Promise<void> => {
     try {
       const filePathPatternInJfrog = getFilePathPatternInJfrog();
       const filePath = filePathPatternInJfrog.replace(versionPattern, version);
-      logMessage(
-        `Starting download of the version: ${chalk.green.bold(version)}`,
-      );
+      logMessage(`Starting download of the version: ${version}`);
       const res = await axios.get(filePath, {
         responseType: 'stream',
         headers: getJfrogApiHeaders(),
@@ -144,7 +141,7 @@ const getTheLatestVersionInfoInJfrog = async () => {
     });
     const version = res?.data?.properties?.version?.[0];
     if (!version) throw error;
-    logMessage('Latest version in jfrog: ' + chalk.green.bold.bold(version));
+    logMessage('Latest version in jfrog: ' + version);
     return version;
   } catch (error) {
     logError('getTheLatestVersionInfoInJfrog Error: ' + error.message, error);
@@ -158,7 +155,7 @@ const getCurrentInstalledVersionNumber = () => {
     try {
       const version = await (await fs.readFile(versionFilePath)).toString();
       if (!version) throw error;
-      logMessage('Current installed version: ' + chalk.yellow.bold(version));
+      logMessage('Current installed version: ' + version);
       return resolve(version);
     } catch (error) {
       logError(
