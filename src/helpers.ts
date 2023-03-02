@@ -1,6 +1,11 @@
 import * as path from 'path';
 import axios from 'axios';
+import chalk from 'chalk';
 import { getEnvVar } from './env.config';
+
+const colorError = chalk.red;
+const colorSuccess = chalk.greenBright.bold;
+const colorLog = chalk.white;
 
 const DD_INFO = {
   API_URL: 'https://http-intake.logs.datadoghq.eu/v1/input',
@@ -10,6 +15,7 @@ const DD_INFO = {
   LOG_LEVEL: {
     ERROR: 'error',
     LOG: 'log',
+    SUCCESS: 'success',
     WARN: 'warn',
   },
 };
@@ -44,6 +50,11 @@ export const logMessage = (message = '') => {
   logToDataDog({ message, level: DD_INFO.LOG_LEVEL.LOG });
 };
 
+export const logSuccess = (message = '') => {
+  if (!message) return;
+  logToDataDog({ message, level: DD_INFO.LOG_LEVEL.SUCCESS });
+};
+
 export const logError = (message = '', error = null) => {
   if (!message) return;
   logToDataDog({
@@ -67,13 +78,20 @@ export const logToDataDog = ({ message, level, error = null }) => {
     service: DD_INFO.SERVICE_NAME,
     ...(error && { error }),
   };
-  error ? console.log(message, error) : console.log(message);
+
+  const colorAndLevelMap = {
+    [DD_INFO.LOG_LEVEL.ERROR]: colorError,
+    [DD_INFO.LOG_LEVEL.LOG]: colorLog,
+    [DD_INFO.LOG_LEVEL.SUCCESS]: colorSuccess,
+  };
+  const color = colorAndLevelMap[level] || colorLog;
+  error ? console.error(color(message) /*error*/) : console.log(color(message));
   axios
     .post(DD_INFO.API_URL, payload, {
       headers: headers,
     })
     .catch((e) => {
-      console.log('logToDataDog Error: ' + e.message);
+      console.error(colorError('logToDataDog Error: ' + e.message));
     });
 };
 

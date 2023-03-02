@@ -4,12 +4,14 @@ import * as path from 'path';
 import { dirname, join } from 'path';
 import { default as axios } from 'axios';
 import ProgressBar from 'progress';
+import chalk from 'chalk';
 import { getEnvVar } from './env.config';
 import {
   logMessage,
   logError,
   isRunningAsTypescript,
   isRunningAsPackagedBinary,
+  logSuccess,
 } from './helpers';
 
 // prettier-ignore
@@ -84,7 +86,9 @@ const saveBinaryFile = (version): Promise<void> => {
     try {
       const filePathPatternInJfrog = getFilePathPatternInJfrog();
       const filePath = filePathPatternInJfrog.replace(versionPattern, version);
-      logMessage(`Starting download of the version: ${version}`);
+      logMessage(
+        `Starting download of the version: ${chalk.green.bold(version)}`,
+      );
       const res = await axios.get(filePath, {
         responseType: 'stream',
         headers: getJfrogApiHeaders(),
@@ -106,7 +110,7 @@ const saveBinaryFile = (version): Promise<void> => {
 
       res.data.on('data', (chunk) => progressBar.tick(chunk.length));
       res.data.on('end', async () => {
-        logMessage(
+        logSuccess(
           `Version ${version} downloaded successfully, Updating the version info in the file`,
         );
         await fs.writeFile(versionFilePath, String(version));
@@ -117,9 +121,9 @@ const saveBinaryFile = (version): Promise<void> => {
       if (axios.isAxiosError(error)) {
         let errorResp = error.message;
         if (error.response && error.response.data) {
-          errorResp = error.response.data.toString();
+          errorResp = error.response.data as any;
         }
-        logMessage('Unable to download the file ' + errorResp);
+        logError('Unable to download the file ' + errorResp);
       }
       logError('saveBinaryFile error: ' + error.message, error);
       return reject(error.message);
@@ -140,7 +144,7 @@ const getTheLatestVersionInfoInJfrog = async () => {
     });
     const version = res?.data?.properties?.version?.[0];
     if (!version) throw error;
-    logMessage('Latest version in jfrog: ' + version);
+    logMessage('Latest version in jfrog: ' + chalk.green.bold.bold(version));
     return version;
   } catch (error) {
     logError('getTheLatestVersionInfoInJfrog Error: ' + error.message, error);
@@ -154,7 +158,7 @@ const getCurrentInstalledVersionNumber = () => {
     try {
       const version = await (await fs.readFile(versionFilePath)).toString();
       if (!version) throw error;
-      logMessage('Current installed version: ' + version);
+      logMessage('Current installed version: ' + chalk.yellow.bold(version));
       return resolve(version);
     } catch (error) {
       logError(
@@ -195,7 +199,7 @@ export const checkApiToGetVersionToInstallForThisMerchant = () => {
       const currentInstalledVersion = await getCurrentInstalledVersionNumber();
       if (currentInstalledVersion == versionToInstall) {
         const msg =
-          'checkApiToGetVersionToInstallForThisMerchant Error: Correct version is installed already';
+          'checkApiToGetVersionToInstallForThisMerchant Error: Correct version is installed already as given in the API';
         logMessage(msg);
         return reject(msg);
       }
